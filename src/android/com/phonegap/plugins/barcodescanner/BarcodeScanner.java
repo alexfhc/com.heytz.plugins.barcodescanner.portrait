@@ -132,6 +132,9 @@ public class BarcodeScanner extends CordovaPlugin {
 
         this.cordova.startActivityForResult((CordovaPlugin) this, intentScan, REQUEST_CODE);
         }
+        else{
+          PermissionHelper.requestPermission(this, 0, Manifest.permission.CAMERA);
+        }
 
     }
 
