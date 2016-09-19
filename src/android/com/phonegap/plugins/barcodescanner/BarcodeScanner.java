@@ -8,17 +8,17 @@
  */
 package com.phonegap.plugins.barcodescanner;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.util.Log;
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.PermissionHelper;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import android.app.Activity;
-import android.content.Intent;
-import android.util.Log;
-
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CallbackContext;
-import org.apache.cordova.PluginResult;
 
 /**
  * This calls out to the ZXing barcode reader and returns the result.
@@ -107,10 +107,32 @@ public class BarcodeScanner extends CordovaPlugin {
      * Starts an intent to scan and decode a barcode.
      */
     public void scan() {
+        boolean takePicturePermission = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
+        if (!takePicturePermission) {
+            takePicturePermission = true;
+            try {
+                PackageManager packageManager = this.cordova.getActivity().getPackageManager();
+                String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
+                if (permissionsInPackage != null) {
+                    for (String permission : permissionsInPackage) {
+                        if (permission.equals(Manifest.permission.CAMERA)) {
+                            takePicturePermission = false;
+                            break;
+                        }
+                    }
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+                // We are requesting the info for our package, so this should
+                // never be caught
+            }
+        }
+        if (takePicturePermission ) {
         Intent intentScan = new Intent(SCAN_INTENT);
         intentScan.addCategory(Intent.CATEGORY_DEFAULT);
 
         this.cordova.startActivityForResult((CordovaPlugin) this, intentScan, REQUEST_CODE);
+        }
+
     }
 
     /**
